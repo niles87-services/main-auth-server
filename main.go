@@ -9,7 +9,6 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/requestid"
-	"github.com/gofiber/template/html"
 	"github.com/joho/godotenv"
 	"gitlab.com/niles87-microservices/main-auth-server/controller"
 	"gitlab.com/niles87-microservices/main-auth-server/mydb"
@@ -32,13 +31,8 @@ func main() {
 	// Set port (for heroku later)
 	PORT := os.Getenv("PORT")
 
-	// use Golangs default html templates
-	engine := html.New("./views", ".html")
-
 	// Initialize app
-	app := fiber.New(fiber.Config{
-		Views: engine,
-	})
+	app := fiber.New(fiber.Config{})
 
 	// Add middleware with .Use
 	app.Use(logger.New())
