@@ -6,8 +6,8 @@ import (
 	"strconv"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/niles87/my-go-services/data"
-	"github.com/niles87/my-go-services/helpers"
+	"gitlab.com/niles87-microservices/main-auth-server/data"
+	"gitlab.com/niles87-microservices/main-auth-server/helpers"
 )
 
 type DBHandler struct {

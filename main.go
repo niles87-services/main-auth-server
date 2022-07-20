@@ -11,8 +11,8 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/requestid"
 	"github.com/gofiber/template/html"
 	"github.com/joho/godotenv"
-	"github.com/niles87/my-go-services/controller"
-	"github.com/niles87/my-go-services/mydb"
+	"gitlab.com/niles87-microservices/main-auth-server/controller"
+	"gitlab.com/niles87-microservices/main-auth-server/mydb"
 )
 
 func main() {
