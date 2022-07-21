@@ -10,3 +10,9 @@ type User struct {
 	Email    string
 	Password string
 }
+
+type UserDto struct {
+	Id    int64
+	Name  string
+	Email string
+}
