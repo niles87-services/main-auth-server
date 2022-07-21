@@ -29,6 +29,7 @@ func (db *DBHandler) GetUsers(c *fiber.Ctx) error {
 		c.Status(fiber.StatusInternalServerError).JSON(data.Message{Msg: "something failed"})
 		return err
 	}
+
 	return c.Status(fiber.StatusOK).JSON(users)
 }
 
@@ -44,7 +45,13 @@ func (db *DBHandler) GetUserById(c *fiber.Ctx) error {
 		return err
 	}
 
-	return c.Status(fiber.StatusOK).JSON(user)
+	userDto := data.UserDto{
+		Id:    user.Id,
+		Name:  user.Name,
+		Email: user.Email,
+	}
+
+	return c.Status(fiber.StatusOK).JSON(userDto)
 }
 
 func (db *DBHandler) CreateUser(c *fiber.Ctx) error {
@@ -81,7 +88,13 @@ func (db *DBHandler) CreateUser(c *fiber.Ctx) error {
 
 	user.Id = id
 
-	return c.Status(fiber.StatusCreated).JSON(user)
+	userDto := data.UserDto{
+		Id:    user.Id,
+		Name:  user.Name,
+		Email: user.Email,
+	}
+
+	return c.Status(fiber.StatusCreated).JSON(userDto)
 }
 
 func (db *DBHandler) UpdateUser(c *fiber.Ctx) error {
@@ -110,7 +123,12 @@ func (db *DBHandler) UpdateUser(c *fiber.Ctx) error {
 	}
 
 	if rowAffected == 1 {
-		return c.Status(fiber.StatusAccepted).JSON(user)
+		userDto := data.UserDto{
+			Id:    user.Id,
+			Name:  user.Name,
+			Email: user.Email,
+		}
+		return c.Status(fiber.StatusAccepted).JSON(userDto)
 	}
 	return c.Status(fiber.StatusNotFound).JSON(data.Message{Msg: "User Not Found"})
 }
@@ -150,7 +168,12 @@ func (db *DBHandler) Login(c *fiber.Ctx) error {
 
 	if match {
 		// Need to add token login
-		return c.Status(fiber.StatusOK).JSON(user)
+		userDto := data.UserDto{
+			Id:    user.Id,
+			Email: user.Email,
+			Name:  user.Name,
+		}
+		return c.Status(fiber.StatusOK).JSON(userDto)
 	} else {
 		return c.Status(fiber.StatusBadRequest).JSON(data.Message{Msg: "Record not found"})
 	}
