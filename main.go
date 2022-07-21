@@ -11,6 +11,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/requestid"
 	"github.com/joho/godotenv"
 	"gitlab.com/niles87-microservices/main-auth-server/controller"
+	"gitlab.com/niles87-microservices/main-auth-server/middleware"
 	"gitlab.com/niles87-microservices/main-auth-server/mydb"
 )
 
@@ -41,15 +42,23 @@ func main() {
 		Max:        10,
 		Expiration: 1 * time.Minute,
 	}))
+	app.Use(func(c *fiber.Ctx) error {
+		c.Set("X-Frame-Options", "SAMEORIGIN")
+		c.Set("X-XSS-Protection", "1; mode=block")
+		c.Set("X-Content-Type-Options", "nosniff")
+		return c.Next()
+	})
 
 	// Group related endpoints together
 	userApp := app.Group("/user")
-	userApp.Get("", hdl.GetUsers)
 	userApp.Post("", hdl.CreateUser)
-	userApp.Put("", hdl.UpdateUser)
-	userApp.Get("/:id", hdl.GetUserById)
-	userApp.Delete("/:id", hdl.DeleteUser)
 	userApp.Post("/login", hdl.Login)
+
+	authUser := userApp.Group("/auth", middleware.New(middleware.Config{}))
+	authUser.Get("", hdl.GetUsers) // needs to be protected route
+	authUser.Put("", hdl.UpdateUser)
+	authUser.Get("/:id", hdl.GetUserById)
+	authUser.Delete("/:id", hdl.DeleteUser)
 
 	log.Fatal(app.Listen(":" + PORT))
 }
