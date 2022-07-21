@@ -9,6 +9,6 @@ RUN go mod download
 
 COPY . ./
 
-RUN go build -o ./main-auth-server
+RUN go build -o /main-auth-server
 
 CMD [ "/main-auth-server" ]
