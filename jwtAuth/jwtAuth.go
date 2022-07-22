@@ -1,4 +1,4 @@
-package middleware
+package jwtauth
 
 import (
 	"errors"
@@ -86,7 +86,7 @@ func configDefault(config ...Config) Config {
 	return cfg
 }
 
-func Encode(claims *jwt.MapClaims, secret string, expireAfter int64) (string, error) {
+func Encode(claims *jwt.MapClaims, expireAfter int64) (string, error) {
 
 	if expireAfter == 0 {
 		expireAfter = ConfigDefault.Expiration

@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"strconv"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gofiber/fiber/v2"
 	"gitlab.com/niles87-microservices/main-auth-server/data"
 	"gitlab.com/niles87-microservices/main-auth-server/helpers"
+	jwtauth "gitlab.com/niles87-microservices/main-auth-server/jwtAuth"
 )
 
 type DBHandler struct {
@@ -173,6 +175,18 @@ func (db *DBHandler) Login(c *fiber.Ctx) error {
 			Email: user.Email,
 			Name:  user.Name,
 		}
+
+		token, err := jwtauth.Encode(&jwt.MapClaims{
+			"id":   userDto.Id,
+			"name": user.Name,
+		}, 2000)
+
+		if err != nil {
+			return c.SendStatus(500)
+		}
+
+		c.Set("Authorization", "Bearer "+token)
+
 		return c.Status(fiber.StatusOK).JSON(userDto)
 	} else {
 		return c.Status(fiber.StatusBadRequest).JSON(data.Message{Msg: "Record not found"})

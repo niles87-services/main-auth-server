@@ -11,7 +11,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/requestid"
 	"github.com/joho/godotenv"
 	"gitlab.com/niles87-microservices/main-auth-server/controller"
-	"gitlab.com/niles87-microservices/main-auth-server/middleware"
+	jwtauth "gitlab.com/niles87-microservices/main-auth-server/jwtAuth"
 	"gitlab.com/niles87-microservices/main-auth-server/mydb"
 )
 
@@ -49,12 +49,18 @@ func main() {
 		return c.Next()
 	})
 
+	app.Use(jwtauth.New(jwtauth.Config{
+		Next: func(c *fiber.Ctx) bool {
+			return c.Get("X-Secret-Pass") == os.Getenv("SKIP_JWT")
+		},
+	}))
+
 	// Group related endpoints together
 	userApp := app.Group("/user")
 	userApp.Post("", hdl.CreateUser)
 	userApp.Post("/login", hdl.Login)
 
-	authUser := userApp.Group("/auth", middleware.New(middleware.Config{}))
+	authUser := userApp.Group("/auth", jwtauth.New(jwtauth.Config{}))
 	authUser.Get("", hdl.GetUsers) // needs to be protected route
 	authUser.Put("", hdl.UpdateUser)
 	authUser.Get("/:id", hdl.GetUserById)
