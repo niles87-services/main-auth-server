@@ -2,6 +2,7 @@ package controller
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"strconv"
 
@@ -100,24 +101,41 @@ func (db *DBHandler) CreateUser(c *fiber.Ctx) error {
 }
 
 func (db *DBHandler) UpdateUser(c *fiber.Ctx) error {
-
-	body := new(data.User)
-	err := c.BodyParser(body)
+	id, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		c.Status(fiber.StatusNotFound).JSON(data.Message{Msg: "Missing params"})
+		return err
+	}
+	body := new(data.UpdateUserDto)
+	err = c.BodyParser(body)
 	if err != nil {
 		c.Status(fiber.StatusBadRequest).JSON(data.Message{Msg: err.Error()})
 		return err
 	}
 
-	user := *body
-	hashedPassword, err := helpers.HashPassword(user.Password)
+	updateUserDto := *body
+	hashedPassword, err := helpers.HashPassword(updateUserDto.NewPassword)
 	if err != nil {
 		fmt.Println(err)
 		c.Status(fiber.StatusInternalServerError).JSON(data.Message{Msg: "Password failure"})
 		return err
 	}
-	user.Password = hashedPassword
 
-	rowAffected, err := updateUserByID(db, user.Id, user)
+	validPassword := helpers.CheckPassword(updateUserDto.ExistingPassword, hashedPassword)
+
+	if !validPassword {
+		c.Status(fiber.StatusInternalServerError).JSON(data.Message{Msg: "Internal service error"})
+		return errors.New("internal server error")
+	}
+
+	user := data.User{
+		Id:       int64(id),
+		Name:     updateUserDto.Name,
+		Email:    updateUserDto.Email,
+		Password: hashedPassword,
+	}
+
+	rowAffected, err := updateUserByID(db, int64(id), user)
 	if err != nil {
 		fmt.Println(err)
 		c.Status(fiber.StatusInternalServerError).JSON(data.Message{Msg: "something failed"})
