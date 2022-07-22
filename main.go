@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -51,7 +52,7 @@ func main() {
 
 	app.Use(jwtauth.New(jwtauth.Config{
 		Next: func(c *fiber.Ctx) bool {
-			return c.Get("X-Secret-Pass") == os.Getenv("SKIP_JWT")
+			return !strings.Contains(c.OriginalURL(), "/auth")
 		},
 	}))
 
@@ -60,9 +61,9 @@ func main() {
 	userApp.Post("", hdl.CreateUser)
 	userApp.Post("/login", hdl.Login)
 
-	authUser := userApp.Group("/auth", jwtauth.New(jwtauth.Config{}))
-	authUser.Get("", hdl.GetUsers) // needs to be protected route
-	authUser.Put("", hdl.UpdateUser)
+	authUser := userApp.Group("/auth")
+	authUser.Get("", hdl.GetUsers)
+	authUser.Put("/:id", hdl.UpdateUser)
 	authUser.Get("/:id", hdl.GetUserById)
 	authUser.Delete("/:id", hdl.DeleteUser)
 
