@@ -48,13 +48,7 @@ func (db *DBHandler) GetUserById(c *fiber.Ctx) error {
 		return err
 	}
 
-	userDto := data.UserDto{
-		Id:    user.Id,
-		Name:  user.Name,
-		Email: user.Email,
-	}
-
-	return c.Status(fiber.StatusOK).JSON(userDto)
+	return c.Status(fiber.StatusOK).JSON(user)
 }
 
 func (db *DBHandler) CreateUser(c *fiber.Ctx) error {
@@ -251,12 +245,12 @@ func addUser(hdl *DBHandler, user data.User) (int64, error) {
 	return id, nil
 }
 
-func queryUserByID(hdl *DBHandler, id int64) (data.User, error) {
-	var user data.User
+func queryUserByID(hdl *DBHandler, id int64) (data.UserDto, error) {
+	var user data.UserDto
 
 	row := hdl.db.QueryRow("SELECT * FROM user WHERE id=?", id)
 
-	if err := row.Scan(&user.Id, &user.Name, &user.Email, &user.Password); err != nil {
+	if err := row.Scan(&user.Id, &user.Name, &user.Email); err != nil {
 		if err == sql.ErrNoRows {
 			return user, fmt.Errorf("queryUserById no record with id: %d ", id)
 		}
