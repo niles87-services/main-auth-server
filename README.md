@@ -1,9 +1,9 @@
-# My Go Services
+# Main Auth Server
 
-Personal project for adding a REST Api for games to use.
+Personal project for adding user authentication micro service for future projects.
 
 ## About
 
-Theres not much in the way of a main view for the site as it is in the middle of being built for personal game projects.
+Docker image hosted at [docker hub](https://hub.docker.com/r/niles87/go_auth_server)
 
-No contributions or feature requests allowed. Every one is free to clone and to build your own off this but it is a current work in progress with very limited features at this time.
+Basic user service and JWT auth for a few routes. Check out main.go to see all available routes.
