@@ -211,8 +211,8 @@ func (db *DBHandler) Login(c *fiber.Ctx) error {
 	}
 }
 
-func queryAllUsers(hdl *DBHandler) ([]data.User, error) {
-	var users []data.User
+func queryAllUsers(hdl *DBHandler) ([]data.UserDto, error) {
+	var users []data.UserDto
 	rows, err := hdl.db.Query("SELECT * FROM user")
 	if err != nil {
 		return nil, fmt.Errorf("queryAllUsers: %v", err)
@@ -221,8 +221,8 @@ func queryAllUsers(hdl *DBHandler) ([]data.User, error) {
 	defer rows.Close()
 
 	for rows.Next() {
-		var user data.User
-		if err := rows.Scan(&user.Id, &user.Name, &user.Email, &user.Password); err != nil {
+		var user data.UserDto
+		if err := rows.Scan(&user.Id, &user.Name, &user.Email); err != nil {
 			return nil, fmt.Errorf("queryAllUsers: %v", err)
 		}
 
