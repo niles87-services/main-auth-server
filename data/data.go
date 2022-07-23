@@ -16,3 +16,10 @@ type UserDto struct {
 	Name  string
 	Email string
 }
+
+type UpdateUserDto struct {
+	Name             string
+	Email            string
+	NewPassword      string
+	ExistingPassword string
+}

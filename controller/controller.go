@@ -2,12 +2,15 @@ package controller
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"strconv"
 
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gofiber/fiber/v2"
 	"gitlab.com/niles87-microservices/main-auth-server/data"
 	"gitlab.com/niles87-microservices/main-auth-server/helpers"
+	jwtauth "gitlab.com/niles87-microservices/main-auth-server/jwtAuth"
 )
 
 type DBHandler struct {
@@ -45,13 +48,7 @@ func (db *DBHandler) GetUserById(c *fiber.Ctx) error {
 		return err
 	}
 
-	userDto := data.UserDto{
-		Id:    user.Id,
-		Name:  user.Name,
-		Email: user.Email,
-	}
-
-	return c.Status(fiber.StatusOK).JSON(userDto)
+	return c.Status(fiber.StatusOK).JSON(user)
 }
 
 func (db *DBHandler) CreateUser(c *fiber.Ctx) error {
@@ -98,24 +95,41 @@ func (db *DBHandler) CreateUser(c *fiber.Ctx) error {
 }
 
 func (db *DBHandler) UpdateUser(c *fiber.Ctx) error {
-
-	body := new(data.User)
-	err := c.BodyParser(body)
+	id, err := strconv.Atoi(c.Params("id"))
+	if err != nil {
+		c.Status(fiber.StatusNotFound).JSON(data.Message{Msg: "Missing params"})
+		return err
+	}
+	body := new(data.UpdateUserDto)
+	err = c.BodyParser(body)
 	if err != nil {
 		c.Status(fiber.StatusBadRequest).JSON(data.Message{Msg: err.Error()})
 		return err
 	}
 
-	user := *body
-	hashedPassword, err := helpers.HashPassword(user.Password)
+	updateUserDto := *body
+	hashedPassword, err := helpers.HashPassword(updateUserDto.NewPassword)
 	if err != nil {
 		fmt.Println(err)
 		c.Status(fiber.StatusInternalServerError).JSON(data.Message{Msg: "Password failure"})
 		return err
 	}
-	user.Password = hashedPassword
 
-	rowAffected, err := updateUserByID(db, user.Id, user)
+	validPassword := helpers.CheckPassword(updateUserDto.ExistingPassword, hashedPassword)
+
+	if !validPassword {
+		c.Status(fiber.StatusInternalServerError).JSON(data.Message{Msg: "Internal service error"})
+		return errors.New("internal server error")
+	}
+
+	user := data.User{
+		Id:       int64(id),
+		Name:     updateUserDto.Name,
+		Email:    updateUserDto.Email,
+		Password: hashedPassword,
+	}
+
+	rowAffected, err := updateUserByID(db, int64(id), user)
 	if err != nil {
 		fmt.Println(err)
 		c.Status(fiber.StatusInternalServerError).JSON(data.Message{Msg: "something failed"})
@@ -173,14 +187,26 @@ func (db *DBHandler) Login(c *fiber.Ctx) error {
 			Email: user.Email,
 			Name:  user.Name,
 		}
+
+		token, err := jwtauth.Encode(&jwt.MapClaims{
+			"id":   userDto.Id,
+			"name": user.Name,
+		}, 2000)
+
+		if err != nil {
+			return c.SendStatus(500)
+		}
+
+		c.Set("Authorization", "Bearer "+token)
+
 		return c.Status(fiber.StatusOK).JSON(userDto)
 	} else {
 		return c.Status(fiber.StatusBadRequest).JSON(data.Message{Msg: "Record not found"})
 	}
 }
 
-func queryAllUsers(hdl *DBHandler) ([]data.User, error) {
-	var users []data.User
+func queryAllUsers(hdl *DBHandler) ([]data.UserDto, error) {
+	var users []data.UserDto
 	rows, err := hdl.db.Query("SELECT * FROM user")
 	if err != nil {
 		return nil, fmt.Errorf("queryAllUsers: %v", err)
@@ -189,8 +215,8 @@ func queryAllUsers(hdl *DBHandler) ([]data.User, error) {
 	defer rows.Close()
 
 	for rows.Next() {
-		var user data.User
-		if err := rows.Scan(&user.Id, &user.Name, &user.Email, &user.Password); err != nil {
+		var user data.UserDto
+		if err := rows.Scan(&user.Id, &user.Name, &user.Email); err != nil {
 			return nil, fmt.Errorf("queryAllUsers: %v", err)
 		}
 
@@ -219,12 +245,12 @@ func addUser(hdl *DBHandler, user data.User) (int64, error) {
 	return id, nil
 }
 
-func queryUserByID(hdl *DBHandler, id int64) (data.User, error) {
-	var user data.User
+func queryUserByID(hdl *DBHandler, id int64) (data.UserDto, error) {
+	var user data.UserDto
 
 	row := hdl.db.QueryRow("SELECT * FROM user WHERE id=?", id)
 
-	if err := row.Scan(&user.Id, &user.Name, &user.Email, &user.Password); err != nil {
+	if err := row.Scan(&user.Id, &user.Name, &user.Email); err != nil {
 		if err == sql.ErrNoRows {
 			return user, fmt.Errorf("queryUserById no record with id: %d ", id)
 		}
