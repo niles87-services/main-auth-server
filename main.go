@@ -57,7 +57,7 @@ func main() {
 	}))
 
 	// Group related endpoints together
-	userApp := app.Group("/user")
+	userApp := app.Group("/api/user")
 	userApp.Post("", hdl.CreateUser)
 	userApp.Post("/login", hdl.Login)
 
