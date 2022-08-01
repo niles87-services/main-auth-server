@@ -93,6 +93,7 @@ func Encode(claims *jwt.MapClaims, expireAfter int64) (string, error) {
 	}
 
 	(*claims)["exp"] = time.Now().UTC().Unix() + expireAfter
+	(*claims)["iss"] = os.Getenv("JWT_ISS_NAME")
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 
