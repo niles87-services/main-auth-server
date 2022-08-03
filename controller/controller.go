@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/dgrijalva/jwt-go"
 	"github.com/gofiber/fiber/v2"
+	"github.com/golang-jwt/jwt/v4"
 	"gitlab.com/niles87-microservices/main-auth-server/data"
 	"gitlab.com/niles87-microservices/main-auth-server/helpers"
 	jwtauth "gitlab.com/niles87-microservices/main-auth-server/jwtAuth"
